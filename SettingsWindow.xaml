@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="设置" Height="220" Width="400"
+        Title="设置" Height="320" Width="450"
         WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
     <Grid Margin="15">
         <Grid.RowDefinitions>
@@ -14,21 +14,42 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
 
-        <TextBlock Grid.Row="0" Grid.Column="0" Text="百度翻译 App ID:" VerticalAlignment="Center" Margin="0,0,10,0"/>
-        <TextBox x:Name="AppIdTextBox" Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" Padding="2"/>
+        <!-- API 设置部分 -->
+        <GroupBox Header="API 设置" Grid.Row="0">
+            <StackPanel Margin="10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="百度翻译 App ID:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <TextBox x:Name="AppIdTextBox" Grid.Column="1" VerticalAlignment="Center" Padding="2"/>
+                </Grid>
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="百度翻译 Secret Key:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <TextBox x:Name="SecretKeyTextBox" Grid.Column="1" VerticalAlignment="Center" Padding="2"/>
+                </Grid>
+            </StackPanel>
+        </GroupBox>
 
-        <TextBlock Grid.Row="1" Grid.Column="0" Text="百度翻译 Secret Key:" VerticalAlignment="Center" Margin="0,10,10,0"/>
-        <TextBox x:Name="SecretKeyTextBox" Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Margin="0,10,0,0" Padding="2"/>
+        <!-- 触发方式设置部分 (核心新增) -->
+        <GroupBox Header="触发方式设置" Grid.Row="1" Margin="0,10,0,0">
+            <StackPanel Margin="10">
+                <RadioButton x:Name="MiddleMouseRadio" Content="按住鼠标中键拖动" IsChecked="True"/>
+                <RadioButton x:Name="RightMouseRadio" Content="按住鼠标右键拖动" Margin="0,5,0,0"/>
+                <RadioButton x:Name="AltLeftMouseRadio" Content="按住 Alt + 鼠标左键拖动" Margin="0,5,0,0"/>
+            </StackPanel>
+        </GroupBox>
 
-        <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Margin="0,15,0,0" TextWrapping="Wrap" Foreground="Gray">
-            请前往百度翻译开放平台申请您的个人密钥。
+        <TextBlock Grid.Row="3" Grid.ColumnSpan="2" Margin="0,15,0,0" TextWrapping="Wrap" Foreground="Gray">
+            提示：请前往百度翻译开放平台申请个人密钥，并在后台关闭 IP 校验。
         </TextBlock>
 
-        <Button Grid.Row="4" Grid.Column="1" Content="保存" HorizontalAlignment="Right" Width="80" Padding="5" Click="SaveButton_Click"/>
+        <Button Grid.Row="5" Content="保存" HorizontalAlignment="Right" Width="80" Padding="5" Click="SaveButton_Click"/>
     </Grid>
 </Window>

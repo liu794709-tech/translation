@@ -5,6 +5,28 @@ using System.Windows;
 
 public class GlobalMouseHook : IDisposable
 {
+    public enum MouseButton
+    {
+        None,
+        Left,
+        Right,
+        Middle
+    }
+
+    [Flags]
+    public enum ModifierKeys : uint
+    {
+        None = 0,
+        Alt = 1,
+        Control = 2,
+        Shift = 4,
+        Win = 8 // 虽然我们不用 Win 键，但定义出来更完整
+    }
+
+    public delegate void MouseKeyCombinationCallback(Point point, MouseButton button, ModifierKeys modifiers);
+    public event MouseKeyCombinationCallback ButtonDown;
+    public event MouseKeyCombinationCallback ButtonUp;
+
     public delegate void MouseHookCallback(Point point);
     public delegate void MouseWheelCallback(int delta);
 
@@ -14,10 +36,19 @@ public class GlobalMouseHook : IDisposable
     public event MouseHookCallback MouseMove;
 
     private const int WH_MOUSE_LL = 14;
+    private const int WM_LBUTTONDOWN = 0x0201;
+    private const int WM_LBUTTONUP = 0x0202;
+    private const int WM_RBUTTONDOWN = 0x0204;
+    private const int WM_RBUTTONUP = 0x0205;
     private const int WM_MBUTTONDOWN = 0x0207;
     private const int WM_MBUTTONUP = 0x0208;
-    private const int WM_MOUSEWHEEL = 0x020A;
     private const int WM_MOUSEMOVE = 0x0200;
+
+    [DllImport("user32.dll")]
+    private static extern short GetKeyState(int nVirtKey);
+    private const int VK_SHIFT = 0x10;
+    private const int VK_CONTROL = 0x11;
+    private const int VK_MENU = 0x12; // ALT 键的虚拟键码
 
     private delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
 
@@ -40,6 +71,15 @@ public class GlobalMouseHook : IDisposable
     public GlobalMouseHook()
     {
         _proc = HookCallback;
+    }
+
+    private ModifierKeys GetCurrentModifiers()
+    {
+        ModifierKeys modifiers = ModifierKeys.None;
+        if ((GetKeyState(VK_MENU) & 0x8000) != 0) modifiers |= ModifierKeys.Alt;
+        if ((GetKeyState(VK_CONTROL) & 0x8000) != 0) modifiers |= ModifierKeys.Control;
+        if ((GetKeyState(VK_SHIFT) & 0x8000) != 0) modifiers |= ModifierKeys.Shift;
+        return modifiers;
     }
 
     public void Install()
@@ -68,35 +108,38 @@ public class GlobalMouseHook : IDisposable
     {
         if (nCode >= 0)
         {
-            // --- 核心修正：在这里添加了对 null 值的检查 ---
-            object? marshalledMouseStruct = Marshal.PtrToStructure(lParam, typeof(MSLLHOOKSTRUCT));
+            object marshalledMouseStruct = Marshal.PtrToStructure(lParam, typeof(MSLLHOOKSTRUCT));
             if (marshalledMouseStruct != null)
             {
                 MSLLHOOKSTRUCT hookStruct = (MSLLHOOKSTRUCT)marshalledMouseStruct;
                 Point currentPoint = new Point(hookStruct.pt.x, hookStruct.pt.y);
 
+                ModifierKeys modifiers = GetCurrentModifiers();
+                MouseButton button = MouseButton.None;
+                bool isDown = false;
+
+                // 判断具体是哪个鼠标事件
                 switch ((int)wParam)
                 {
-                    case WM_MBUTTONDOWN:
-                        MiddleButtonDown?.Invoke(currentPoint);
-                        break;
+                    case WM_LBUTTONDOWN: button = MouseButton.Left; isDown = true; break;
+                    case WM_LBUTTONUP: button = MouseButton.Left; isDown = false; break;
+                    case WM_RBUTTONDOWN: button = MouseButton.Right; isDown = true; break;
+                    case WM_RBUTTONUP: button = MouseButton.Right; isDown = false; break;
+                    case WM_MBUTTONDOWN: button = MouseButton.Middle; isDown = true; break;
+                    case WM_MBUTTONUP: button = MouseButton.Middle; isDown = false; break;
+                    case WM_MOUSEMOVE: MouseMove?.Invoke(currentPoint); break;
+                }
 
-                    case WM_MBUTTONUP:
-                        MiddleButtonUp?.Invoke(currentPoint);
-                        break;
-
-                    case WM_MOUSEWHEEL:
-                        int delta = (short)((hookStruct.mouseData >> 16) & 0xFFFF);
-                        MouseWheelScroll?.Invoke(delta);
-                        break;
-
-                    case WM_MOUSEMOVE:
-                        MouseMove?.Invoke(currentPoint);
-                        break;
+                // 如果是按键事件，则触发统一的 ButtonDown 或 ButtonUp 事件
+                if (button != MouseButton.None)
+                {
+                    if (isDown)
+                        ButtonDown?.Invoke(currentPoint, button, modifiers);
+                    else
+                        ButtonUp?.Invoke(currentPoint, button, modifiers);
                 }
             }
         }
-
         return CallNextHookEx(_hookID, nCode, wParam, lParam);
     }
 
