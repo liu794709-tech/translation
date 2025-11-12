@@ -111,7 +111,8 @@ namespace translation
             }
             else
             {
-                _historyWindow = new HistoryWindow();
+                // --- 核心修正：创建窗口时，把 HistoryService 传进去 ---
+                _historyWindow = new HistoryWindow(_historyService);
                 _historyWindow.ShowHistory(_historyService.GetHistory());
                 _historyWindow.Show();
             }

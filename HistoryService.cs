@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq; // <-- 引入 LINQ 命名空间
 using Newtonsoft.Json;
 
 public class HistoryService
@@ -10,10 +11,9 @@ public class HistoryService
 
     public HistoryService()
     {
-        // 将历史记录文件保存在用户个人的、隐藏的 AppData 文件夹中，这是最标准的做法
         string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        string appFolderPath = Path.Combine(appDataPath, "TranslationTool"); // 为我们的应用创建一个专属文件夹
-        Directory.CreateDirectory(appFolderPath); // 确保这个文件夹存在
+        string appFolderPath = Path.Combine(appDataPath, "TranslationTool");
+        Directory.CreateDirectory(appFolderPath);
         _historyFilePath = Path.Combine(appFolderPath, "history.json");
 
         _historyCache = LoadHistory();
@@ -32,12 +32,27 @@ public class HistoryService
             TranslatedText = translated,
             Timestamp = DateTime.Now
         };
-
-        // 在列表的开头添加新记录，这样最新的总在最上面
         _historyCache.Insert(0, record);
-
-        // 将更新后的整个列表保存回文件
         SaveHistory();
+    }
+
+    // --- 核心新增：删除一条指定的记录 ---
+    public void DeleteRecord(TranslationRecord recordToDelete)
+    {
+        if (recordToDelete == null) return;
+
+        // 从缓存列表中移除指定的记录对象
+        _historyCache.Remove(recordToDelete);
+
+        // 保存更改
+        SaveHistory();
+    }
+
+    // --- 核心新增：清空所有历史记录 ---
+    public void ClearHistory()
+    {
+        _historyCache.Clear(); // 清空缓存列表
+        SaveHistory();         // 将空的列表保存回文件
     }
 
     private List<TranslationRecord> LoadHistory()
@@ -48,14 +63,11 @@ public class HistoryService
             {
                 return new List<TranslationRecord>();
             }
-
             string json = File.ReadAllText(_historyFilePath);
-            // 如果文件是空的或损坏的，返回一个空列表
             return JsonConvert.DeserializeObject<List<TranslationRecord>>(json) ?? new List<TranslationRecord>();
         }
         catch (Exception)
         {
-            // 如果读取或解析失败，返回一个空列表以防程序崩溃
             return new List<TranslationRecord>();
         }
     }
@@ -69,7 +81,7 @@ public class HistoryService
         }
         catch (Exception)
         {
-            // 如果保存失败，我们暂时忽略错误，避免打扰用户
+            // 忽略保存错误
         }
     }
 }
