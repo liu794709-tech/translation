@@ -54,7 +54,7 @@
 本项目使用 Visual Studio 2022 和 .NET 7 构建。
 
 1.  **环境准备**
-    *   安装 [Visual Studio 2022](https://visualstudio.microsoft.com/vs/)，并确保已安装“.NET 桌面开发”工作负载。
+    *   安装 [Visual Studio 2022](https://visualstudio.microsoft.com/vs/)，并确保已安装“.NET 桌面开发”工作负载
     *   确保已安装 [.NET 7 SDK](https://dotnet.microsoft.com/download/dotnet/7.0)。
 
 2.  **构建项目**
