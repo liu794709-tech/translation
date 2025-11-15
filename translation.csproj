@@ -9,12 +9,10 @@
 		<Platforms>x64</Platforms>
 		<ApplicationIcon>translation.ico</ApplicationIcon>
 
-		<!-- 
-			!!! 核心修正 !!!
-			这一行代码告诉编译器，在创建“单个文件”应用时，
-			需要将所有原生的 .dll 文件也包含进去，并在程序启动时解压到一个临时目录。
-			这是解决 Tesseract 在单文件模式下闪退的关键。
-		-->
+
+		<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+
+		
 		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 
 	</PropertyGroup>
